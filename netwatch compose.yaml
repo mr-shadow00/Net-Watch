@@ -1,0 +1,39 @@
+services:
+  netwatch:
+    image: python:3.12-slim
+    container_name: netwatch
+    restart: unless-stopped
+    working_dir: /app
+    network_mode: host
+    ports:
+      - "8642:8642"
+    command: ["sh", "-c", "apt-get update -qq && apt-get install -y -qq nmap >/dev/null && pip install --no-cache-dir --break-system-packages -q -r requirements.txt && python app.py"]
+    volumes:
+      - /DATA/AppData/netwatch/app:/app
+      - /DATA/AppData/netwatch/data:/data
+    environment:
+      - SUBNET=192.168.1.0/24  # comma-separate for multiple subnets, e.g. 192.168.1.0/24,192.168.2.0/24
+      - SCAN_INTERVAL=120
+      - NMAP_ARGS=-sn
+      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/XXXXXXXX/XXXXXXXX
+      - DB_PATH=/data/netwatch.db
+      - TZ=Asia/Dhaka
+      - PUBLIC_IP_ENABLED=true
+      - PUBLIC_IP_INTERVAL=600
+      # Security — set a password to require login. Leave blank for no auth.
+      - AUTH_PASSWORD=
+      # SECRET_KEY signs login sessions. If left blank, one is generated at
+      # startup (sessions won't survive a restart). Set your own random
+      # string here to keep sessions valid across restarts.
+      - SECRET_KEY=
+      # Auto-archive devices offline this many days (0 disables it). Pinned
+      # and known devices are never auto-archived.
+      - STALE_DAYS=30
+      # Daily Discord summary (online count, new today, public IP).
+      - DAILY_DIGEST_ENABLED=true
+      - DAILY_DIGEST_INTERVAL=86400
+      # Fall back to an online MAC-vendor lookup when nmap's bundled
+      # database doesn't recognize a device.
+      - VENDOR_LOOKUP_ENABLED=true
+      # Optional IPv6 subnet(s) to scan alongside SUBNET, comma-separated.
+      - SUBNET_V6=
