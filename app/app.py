@@ -311,12 +311,18 @@ def patch_self_entry(devices):
     return devices
 
 
+_vendor_offline_until = 0.0
+
+
 def lookup_vendor_online(ip, mac):
     """nmap's vendor lookup uses a bundled MAC-prefix database that only
     updates when nmap itself is upgraded, so newer device vendors often
     just show blank. Fall back to a free online lookup for those cases —
     only called for devices nmap couldn't identify, and only once per
     device (result cached in vendor_api) so this stays lightweight."""
+    global _vendor_offline_until
+    if time.time() < _vendor_offline_until:
+        return  # no internet a moment ago — don't stall the scan again
     try:
         resp = requests.get(f"https://api.macvendors.com/{mac}", timeout=6)
         if resp.status_code == 200 and resp.text.strip():
@@ -326,6 +332,9 @@ def lookup_vendor_online(ip, mac):
                 conn.execute("UPDATE devices SET vendor_api=? WHERE ip=?", (vendor, ip))
                 conn.commit()
                 conn.close()
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        _vendor_offline_until = time.time() + 600
+        print(f"[vendor-lookup] offline, pausing lookups for 10 min: {e}")
     except Exception as e:
         print(f"[vendor-lookup] failed for {mac}: {e}")
 

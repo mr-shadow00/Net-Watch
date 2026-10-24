@@ -7,13 +7,17 @@ services:
     network_mode: host
     ports:
       - "8642:8642"
-    command: ["sh", "-c", "apt-get update -qq && apt-get install -y -qq nmap >/dev/null && pip install --no-cache-dir --break-system-packages -q -r requirements.txt && python app.py"]
+    command: ["sh", "-c", "command -v nmap >/dev/null || (apt-get update -qq && apt-get install -y -qq nmap >/dev/null); python -c 'import flask, requests' 2>/dev/null || pip install --no-cache-dir --break-system-packages -q -r requirements.txt; python app.py"]
     volumes:
       - /DATA/AppData/netwatch/app:/app
       - /DATA/AppData/netwatch/data:/data
     environment:
       - SUBNET=192.168.1.0/24  # comma-separate for multiple subnets, e.g. 192.168.1.0/24,192.168.2.0/24
       - SCAN_INTERVAL=120
+      # Your router's IP. It is drawn as the ROUTER hub in Topology and
+      # hidden from the device column. Leave blank to guess the first
+      # address in SUBNET (e.g. 192.168.1.1).
+      - GATEWAY_IP=
       - NMAP_ARGS=-sn
       - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/XXXXXXXX/XXXXXXXX
       - DB_PATH=/data/netwatch.db

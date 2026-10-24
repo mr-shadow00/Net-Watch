@@ -53,3 +53,11 @@ scan will only see the VM's isolated network segment.
   "known."
 - **Install as an app (PWA)** — open the dashboard on your phone and use
   "Add to Home Screen" for an app-like icon and window.
+
+
+## Offline use
+
+Fonts are bundled locally (app/static/fonts), so the UI loads with no internet.
+The compose installs nmap and the Python packages only if missing, so restarts work offline.
+If there is no internet, online MAC-vendor lookups pause for 10 minutes instead of slowing every scan.
+The public-IP check and Discord alerts need internet and simply fail quietly until it returns.

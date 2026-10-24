@@ -625,8 +625,11 @@ function renderTopology() {
 
   // the router's own IP is already drawn as the ROUTER hub below, so drop
   // it from the device column to avoid showing the same box twice
+  // Matches the gateway by IP, and also drops anything you've tagged as a
+  // "router" so a router at a different address never gets its own line.
   const devices = allDevices
-    .filter((d) => !GATEWAY_IP || d.ip !== GATEWAY_IP)
+    .filter((d) => !(GATEWAY_IP && d.ip === GATEWAY_IP))
+    .filter((d) => (d.device_type || "").toLowerCase() !== "router")
     .sort((a, b) => a.ip.localeCompare(b.ip, undefined, { numeric: true }));
   const n = devices.length;
 
@@ -746,7 +749,6 @@ function renderTopology() {
       <circle cx="${routerX}" cy="${routerY}" r="${routerR}" fill="var(--panel)" stroke="var(--amber)" stroke-width="2.5" />
       <svg x="${routerX - routerIconSize / 2}" y="${routerY - 22}" width="${routerIconSize}" height="${routerIconSize}" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${TYPE_ICON_PATHS.router}</svg>
       <text x="${routerX}" y="${routerY + 4}" text-anchor="middle" fill="var(--amber)" font-family="var(--display)" font-size="12" font-weight="700">ROUTER</text>
-      <text x="${routerX}" y="${routerY + 18}" text-anchor="middle" fill="var(--text-dim)" font-family="var(--mono)" font-size="10">${GATEWAY_IP || "gateway"}</text>
     </g>
   `;
 
